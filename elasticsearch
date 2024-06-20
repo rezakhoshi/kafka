@@ -1,4 +1,16 @@
-wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
-sudo apt-add-repository "deb https://artifacts.elastic.co/packages/7.x/apt stable main"
-sudo apt-get update
-sudo apt-get install elasticsearch logstash kibana
+# Download and install the public signing key
+curl -fsSL https://artifacts.elastic.co/GPG-KEY-elasticsearch | gpg --dearmor | sudo tee /usr/share/keyrings/elasticsearch-archive-keyring.gpg > /dev/null
+
+# Save the repository definition
+echo "deb [signed-by=/usr/share/keyrings/elasticsearch-archive-keyring.gpg] https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-7.x.list
+
+# Update the package index and install Elasticsearch
+sudo apt update
+sudo apt install elasticsearch
+
+# Enable and start the Elasticsearch service
+sudo systemctl enable elasticsearch
+sudo systemctl start elasticsearch
+
+# Verify Elasticsearch is running
+curl -X GET "localhost:9200/"
