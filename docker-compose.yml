@@ -20,3 +20,11 @@ services:
     environment:
       KAFKA_BROKERCONNECT: "192.168.1.11:9092"
       JVM_OPTS: "-Xms32M -Xmx64M"
+
+
+        kafka-manager:
+    image: hlebalbau/kafka-manager:stable
+    ports:
+      - "9001:9000"
+    environment:
+      ZK_HOSTS: zookeeper:2181
