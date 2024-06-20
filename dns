@@ -1,0 +1,88 @@
+Configuring DNS over HTTPS on Ubuntu with Proxy
+1. Install cloudflared
+cloudflared is a command-line tool from Cloudflare that can be used as a DoH client.
+
+sh
+Copy code
+curl -LO https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+sudo dpkg -i cloudflared-linux-amd64.deb
+2. Configure cloudflared
+Create a configuration file for cloudflared to specify your DoH service and proxy settings.
+
+sh
+Copy code
+sudo mkdir -p /etc/cloudflared
+sudo nano /etc/cloudflared/config.yml
+Add the following content to config.yml:
+
+yaml
+Copy code
+proxy-dns: true
+proxy-dns-port: 5053
+proxy-dns-upstream:
+  - https://dns.403.online/dns-query
+proxy:
+  https_proxy: http://user:pass@192.168.1.11:3128
+Replace user:pass@192.168.1.11:3128 with your actual proxy credentials and IP address.
+
+3. Run cloudflared as a Service
+To make sure cloudflared starts on boot, create a systemd service.
+
+sh
+Copy code
+sudo nano /etc/systemd/system/cloudflared.service
+Add the following content to cloudflared.service:
+
+ini
+Copy code
+[Unit]
+Description=cloudflared DNS over HTTPS proxy
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/cloudflared --config /etc/cloudflared/config.yml
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+Enable and start the service:
+
+sh
+Copy code
+sudo systemctl enable cloudflared
+sudo systemctl start cloudflared
+4. Configure System DNS
+Update your system’s DNS settings to use cloudflared as the local DNS resolver.
+
+Edit /etc/resolv.conf:
+
+sh
+Copy code
+sudo nano /etc/resolv.conf
+Add the following line:
+
+sh
+Copy code
+nameserver 127.0.0.1
+To prevent the file from being overwritten by network managers, you can make it immutable:
+
+sh
+Copy code
+sudo chattr +i /etc/resolv.conf
+Alternatively, configure DNS settings using NetworkManager:
+
+sh
+Copy code
+nmcli con modify <your-connection-name> ipv4.dns "127.0.0.1"
+nmcli con modify <your-connection-name> ipv4.ignore-auto-dns yes
+nmcli con up <your-connection-name>
+Replace <your-connection-name> with the name of your network connection.
+
+5. Test the Configuration
+Verify that your DNS queries are now using the DoH resolver:
+
+sh
+Copy code
+dig @127.0.0.1 example.com
