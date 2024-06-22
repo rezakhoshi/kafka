@@ -1,0 +1,18 @@
+input {
+  kafka {
+    bootstrap_servers => "192.168.1.11:9092"
+    topics => ["logs_topic"]
+    codec => "json"
+  }
+}
+
+filter {
+  # Add your filters here if needed
+}
+
+output {
+  elasticsearch {
+    hosts => ["http://192.168.1.11:9200"]
+    index => "logs-%{+YYYY.MM.dd}"
+  }
+}
